@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pong</title>
+    <link rel="icon" type="image" href="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/0ba9c676-afd3-4a71-8012-4f144cc6a7ac/d3bm9m6-13a5586d-965b-4c11-a3cb-ba2e00079d3a.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzBiYTljNjc2LWFmZDMtNGE3MS04MDEyLTRmMTQ0Y2M2YTdhY1wvZDNibTltNi0xM2E1NTg2ZC05NjViLTRjMTEtYTNjYi1iYTJlMDAwNzlkM2EucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.Fmg_-myIFcwMSStoGokiErDEW1XAKWLaXzsLDu0Fuhc">
+    <style>
+        #container{
+            position: relative;
+            display: flex;
+            justify-content: center;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas></canvas>
+    </div>
+    <script>
+        const canvas = document.querySelector("canvas");
+        const c = canvas.getContext("2d");
+        canvas.width = 1024;
+        canvas.height = 576;
+        const xVelocity = 6;
+        const yVelocity = 6;
+        let pScore = 0;
+        let eScore = 0;
+        let isMultiplayer = false; // Flag to toggle between single-player and multiplayer modes
+        let p2="Computer"
+        let p1="Player"
+        const keySate = [];
+
+        class Sprite {
+            constructor({ position, imageSrc, scale = 1, frames = 1 }) {
+                this.position = position;
+                this.height = 150;
+                this.width = 50;
+                this.image = new Image();
+                this.image.src = imageSrc;
+                this.scale = scale;
+                this.frames = frames;
+                this.cframe = 0;
+                this.eframe = 0;
+                this.hframe = 5;
+            }
+
+            draw() {
+                c.drawImage(
+                    this.image,
+                    this.cframe * (this.image.width / this.frames),
+                    0,
+                    this.image.width / this.frames,
+                    this.image.height,
+                    this.position.x,
+                    this.position.y,
+                    this.image.width / this.frames * this.scale,
+                    this.image.height * this.scale
+                );
+            }
+
+            update() {
+                this.draw();
+                this.eframe++;
+
+                if (this.eframe % this.hframe === 0) {
+
+                    if (this.cframe < this.frames - 1) {
+                        this.cframe++;
+                    } else {
+                        this.cframe = 0;
+                    }
+                }
+            }
+
+        }
+
+
+        class Ball {
+            constructor({ position, r, color }) {
+                this.position = position;
+                this.r = r;
+                this.velocity = { x: xVelocity, y: yVelocity }; // Store velocity in an object
+                this.color=color
+            }
+
+            draw() {
+                c.beginPath();
+                c.arc(this.position.x, this.position.y, this.r, 0, 2 * Math.PI);
+                c.stroke();
+                c.fillStyle = this.color;
+                c.fill();
+            }
+
+            update() {
+                this.draw();
+
+                // Update position based on velocity
+                this.position.x += this.velocity.x;
+                this.position.y += this.velocity.y;
+
+                // Check collision with top and bottom boundaries
+                if (this.position.y - this.r <= 0 || this.position.y + this.r >= canvas.height) {
+                    this.velocity.y = -this.velocity.y; // Reverse y velocity to bounce
+                }
+
+                // Check collision with player's paddle
+                if (
+                    this.position.x + this.r >= player.position.x &&
+                    this.position.y >= player.position.y &&
+                    this.position.y <= player.position.y + player.height
+                ) {
+                    // Handle collision with player's paddle
+                    // For example, change ball's x-velocity
+                    this.velocity.x = -this.velocity.x; // Reverse x velocity to bounce off the paddle
+                }
+                // Check collision with ai's paddle
+                if (
+                this.position.x - this.r <= ai.position.x + ai.width &&
+                    this.position.y >= ai.position.y &&
+                    this.position.y <= ai.position.y + ai.height
+                ) {
+                    // Handle collision with AI's paddle
+                    // For example, change ball's x-velocity
+                    this.velocity.x = -this.velocity.x; // Reverse x velocity to bounce off the paddle
+                }
+
+            }
+        }
+
+        class Player {
+            constructor({ position, color }) {
+                this.position = position
+                this.width = 20
+                this.height = 100
+                this.color = color
+            }
+            draw() {
+                c.fillStyle = this.color
+                c.fillRect(this.position.x, this.position.y, this.width, this.height)
+            }
+
+            update() {
+                this.draw();
+                if (isMultiplayer) {
+                    if (this == player) {
+                        if (keySate["ArrowUp"]) {
+                            // Move up only if player's paddle is not at the top edge of the canvas
+                            if (this.position.y > 0) {
+                                this.position.y -= yVelocity / 2;
+                            }
+                        }
+                        if (keySate["ArrowDown"]) {
+                            // Move down only if player's paddle is not at the bottom edge of the canvas
+                            if (this.position.y + this.height < canvas.height) {
+                                this.position.y += yVelocity / 2;
+                            }
+                        }
+                    } else {
+                        // Second player controls using W and S keys
+                        if (keySate["w"]) {
+                            // Move up only if player's paddle is not at the top edge of the canvas
+                            if (this.position.y > 0) {
+                                this.position.y -= yVelocity / 2;
+                            }
+                        }
+                        if (keySate["s"]) {
+                            // Move down only if player's paddle is not at the bottom edge of the canvas
+                            if (this.position.y + this.height < canvas.height) {
+                                this.position.y += yVelocity / 2;
+                            }
+                        }
+                    }
+                } else {
+                    // Single player mode
+                    if (this == player) {
+                        if (keySate["ArrowUp"]) {
+                            // Move up only if player's paddle is not at the top edge of the canvas
+                            if (this.position.y > 0) {
+                                this.position.y -= yVelocity / 2;
+                            }
+                        }
+                        if (keySate["ArrowDown"]) {
+                            // Move down only if player's paddle is not at the bottom edge of the canvas
+                            if (this.position.y + this.height < canvas.height) {
+                                this.position.y += yVelocity / 2;
+                            }
+                        }
+                    } else {
+                        // AI Logic
+                        if (ball.position.y < this.position.y + this.height / 2) {
+                            this.position.y -= yVelocity / 2; // Move up if ball is above
+                        } else {
+                            this.position.y += yVelocity / 2; // Move down if ball is below
+                        }
+                    }
+                }
+            }
+        }
+
+
+        const background = new Sprite({
+            position: {
+                x: 0,
+                y: 0
+            },
+            imageSrc: "background.png",
+
+        })
+        const ball = new Ball({
+            position: {
+                x: canvas.width / 2,
+                y: canvas.height / 2
+            },
+            r: 20,color:"white"
+        })
+
+        const player = new Player({
+            position: {
+                x: canvas.width - 20,
+                y: canvas.height / 2
+            },
+            color: "red"
+        })
+
+        const ai = new Player({
+            position: {
+                x: 0,
+                y: canvas.height / 2
+            },
+            color: "green"
+        })
+
+        function recenter() {
+            ball.position.x = canvas.width / 2
+            ball.position.y = canvas.height / 3
+        }
+
+        function drawScores() {
+            c.font = "24px Arial";
+            c.fillStyle = "white";
+            c.fillText(`${p2}: ${pScore}`, 20, 40);
+            c.fillText(`${p1}: ${eScore}`, canvas.width - 150, 40);
+        }
+
+        function drawWinMessage(player) {
+            c.font = "36px Arial";
+            c.fillStyle = "white";
+            ball.color='black'
+            c.fillText(` ${player} Wins!`, canvas.width / 2 - 150, canvas.height / 2);
+        }
+
+        function loop() {
+            background.update()
+            ball.update()
+            player.update()
+            ai.update()
+            drawScores();
+
+            if (pScore >= 10) {
+                drawWinMessage(p2);
+                return;
+            }
+
+            if (eScore >= 10) {
+                drawWinMessage(p1);
+                return;
+            }
+
+            if (ball.position.x <= 0 - ball.r) {
+                eScore += 1
+                recenter()
+            }
+
+
+            if (ball.position.x >= canvas.width + ball.r) {
+                pScore += 1
+                recenter()
+            }
+
+            window.requestAnimationFrame(loop)
+        }
+        window.requestAnimationFrame(loop)
+
+        document.addEventListener("keydown", e => {
+            keySate[e.key] = true;
+            // alert(e.key)
+            if (e.key === "m") {
+                if(isMultiplayer){
+                    isMultiplayer=false
+                    p2="Computer"
+                    p1="Player"
+                }else{
+                    isMultiplayer=true
+                    p1="Player 1"
+                    p2="Player 2"
+                }
+            }
+        })
+
+        document.addEventListener("keyup", e => {
+            keySate[e.key] = false
+        })
+    </script>
+</body>
+</html>
