@@ -176,13 +176,13 @@
                         if (keySate["ArrowUp"]) {
                             // Move up only if player's paddle is not at the top edge of the canvas
                             if (this.position.y > 0) {
-                                this.position.y -= yVelocity / 2;
+                                this.position.y -= yVelocity ;
                             }
                         }
                         if (keySate["ArrowDown"]) {
                             // Move down only if player's paddle is not at the bottom edge of the canvas
                             if (this.position.y + this.height < canvas.height) {
-                                this.position.y += yVelocity / 2;
+                                this.position.y += yVelocity ;
                             }
                         }
                     } else {
@@ -216,7 +216,7 @@
 
         const player = new Player({
             position: {
-                x: canvas.width - 20,
+                x: canvas.width - 100,
                 y: canvas.height / 2
             },
             color: "red"
@@ -224,7 +224,7 @@
 
         const ai = new Player({
             position: {
-                x: 0,
+                x: 100,
                 y: canvas.height / 2
             },
             color: "green"
