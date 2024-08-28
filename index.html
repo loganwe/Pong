@@ -100,7 +100,8 @@
 
                 // Check collision with top and bottom boundaries
                 if (this.position.y - this.r <= 0 || this.position.y + this.r >= canvas.height) {
-                    this.velocity.y = -this.velocity.y; // Reverse y velocity to bounce
+                    this.velocity.y = -this.velocity.y +6 ; // Reverse y velocity to bounce
+                    
                 }
 
                 // Check collision with player's paddle
@@ -111,7 +112,7 @@
                 ) {
                     // Handle collision with player's paddle
                     // For example, change ball's x-velocity
-                    this.velocity.x = -this.velocity.x; // Reverse x velocity to bounce off the paddle
+                    this.velocity.x = -this.velocity.x +6; // Reverse x velocity to bounce off the paddle
                 }
                 // Check collision with ai's paddle
                 if (
